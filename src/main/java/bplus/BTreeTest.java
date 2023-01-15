@@ -7,16 +7,20 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author fzk
- * @datetime 2023-01-15 00:02:05
+ * @datetime 2023-01-16 00:13:01
  */
-public class Main {
+public class BTreeTest {
     public static void main(String[] args) {
-        MyBPlusTree bPlusTree = new MyBPlusTree(16);
+        new BTreeTest().test1();
+    }
+//    @Test
+    void test1(){
+        MyBPlusTree bPlusTree =  new MyBPlusTree(16);
         ThreadLocalRandom random = ThreadLocalRandom.current();
 
         HashSet<String> set = new HashSet<>();
-        for (int i = 0; i < 1000; i++) {
-            String key= MyRandomUtil.randomLowerStr(4);
+        for (int i = 0; i < 10000; i++) {
+            String key= MyRandomUtil.randomLowerStr(6);
 //            String key = String.format("1%04d", random.nextInt(0, 10000));
             if (!set.add(key)) {
                 System.out.println("重复key: " + key);

@@ -5,6 +5,7 @@ package bplus;
  * B树中所有结点的孩子个数的最大值称为B树的阶, 一般从查找效率考虑，通常要求M>=3
  * 每一个节点最多M个子节点，子节点与key数量相同
  * key是唯一，即唯一性索引
+ * <a href="https://segmentfault.com/a/1190000041696709">B+树原理以及Go语言实现</a>
  *
  * @author fzk
  * @datetime 2023-01-14 23:25:41
@@ -110,7 +111,7 @@ public class MyBPlusTree {
 //                rightNode.parentNode = root;
             } else {
 //                rightNode.parentNode = node.parentNode;
-                insertNode(node.parentNode,rightNode.getMinKey(), rightNode);
+                insertNode(node.parentNode, rightNode.getMinKey(), rightNode);
             }
 
             // 页分裂完成，选择插入结点

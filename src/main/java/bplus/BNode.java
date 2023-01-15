@@ -11,6 +11,7 @@ import java.util.Queue;
  */
 public abstract class BNode {
     public int size = 0;// key的数量
+    private static final int BinarySearchThreshold = 8;// 二分查找阈值，数组较小时遍历平均情况下会比较次数更少
     public BEntry[] entries;
     public BNode parentNode;
 
@@ -27,24 +28,40 @@ public abstract class BNode {
     }
 
     public boolean isExists(String key) {
-        for (int i = 0; i < size; i++) {
-            if (entries[i].key.equals(key))
-                return true;
-        }
-        return false;
+        return searchKeyIndex(key) != -1;
     }
 
-    // 替换key，必须已经存在
-    public Object replace(String key, Object newVal) {
-        // todo: 这里可以优化为二分查找
-        for (int i = 0; i < size; i++) {
-            if (entries[i].key.equals(key)) {
-                Object oldVal = entries[i].value;
-                entries[i].value = newVal;
-                return oldVal;
+    // 查找key的索引，不存在返回-1
+    public int searchKeyIndex(String key) {
+        if (size <= 0) return -1;
+        if (size >= BinarySearchThreshold) {
+            int left = 0, right = size - 1;
+            while (left <= right) {
+                int mid = (left + right) >> 1;
+                int cmp = key.compareTo(entries[mid].key);
+                if (cmp < 0) right = mid - 1;
+                else if (cmp == 0) return mid;
+                else left = mid + 1;
+            }
+        } else {
+            // 遍历
+            for (int i = 0; i < size; i++) {
+                if (key.compareTo(entries[i].key) == 0) {
+                    return i;
+                }
             }
         }
-        throw new RuntimeException(String.format("%s没找到进行替换?", key));
+        return -1;
+    }
+
+    // 更新key的value，必须已经存在
+    public Object replace(String key, Object newVal) {
+        int index = searchKeyIndex(key);
+        if (index == -1)
+            throw new RuntimeException(String.format("更新key: %s的value时在待替换结点中未找到该key", key));
+        Object old = entries[index].value;
+        entries[index].value = newVal;
+        return old;
     }
 
 
@@ -87,9 +104,10 @@ public abstract class BNode {
         }
     }
 
+    // 每个结点维护一组键值映射
     public static class BEntry {
         public String key;
-        public Object value;
+        public Object value;// 在叶子结点中为保存的值，在非叶子结点中保存为该key指向的childNode
 
         public BEntry(String key, Object value) {
             this.key = key;
@@ -97,11 +115,13 @@ public abstract class BNode {
         }
     }
 
-    // 打印b+树
+    // 打印B+树
     public void printSelf() {
+        int depth = 0;// 记录深度
         Queue<BNode> queue = new LinkedList<>();
         queue.add(this);
         while (queue.size() > 0) {
+            depth++;
             // 这一层个数
             int len = queue.size();
             while (len-- > 0) {
@@ -119,6 +139,7 @@ public abstract class BNode {
             }
             System.out.println();
         }
+        System.out.printf("B+树：阶数：%d 层数：%d %n", this.entries.length, depth);
     }
 
     // 检查b+树是否合法
