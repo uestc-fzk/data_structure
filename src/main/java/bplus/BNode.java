@@ -158,7 +158,7 @@ public abstract class BNode {
                     }
                 }
                 // 再检查此节点的key指向的是子结点min key
-                if (remove instanceof MyBPlusTree.NonLeafNode) {
+                if (remove instanceof BTree.IndexNode) {
                     for (int i = 0; i < remove.size; i++) {
                         if (!remove.entries[i].key.equals(((BNode) remove.entries[i].value).getMinKey())) {
                             printSelf();
