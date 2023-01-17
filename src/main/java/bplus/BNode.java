@@ -139,35 +139,7 @@ public abstract class BNode {
             }
             System.out.println();
         }
-        System.out.printf("B+树：阶数：%d 层数：%d %n", this.entries.length, depth);
+//        System.out.printf("B+树：阶数：%d 层数：%d %n", this.entries.length, depth);
     }
 
-    // 检查b+树是否合法
-    public void checkSelf() {
-        Queue<BNode> queue = new LinkedList<>();
-        queue.add(this);
-        while (queue.size() > 0) {
-            int len = queue.size();// 此层个数
-            while (len-- > 0) {
-                BNode remove = queue.remove();
-                // 先检查此节点的key是顺序排列的
-                for (int i = 1; i < remove.size; i++) {
-                    if (remove.entries[i - 1].key.compareTo(remove.entries[i].key) >= 0) {
-                        printSelf();
-                        throw new RuntimeException("存在结点的key不是顺序排列");
-                    }
-                }
-                // 再检查此节点的key指向的是子结点min key
-                if (remove instanceof BTree.IndexNode) {
-                    for (int i = 0; i < remove.size; i++) {
-                        if (!remove.entries[i].key.equals(((BNode) remove.entries[i].value).getMinKey())) {
-                            printSelf();
-                            throw new RuntimeException(String.format("%s不是其指向的子结点min key", remove.entries[i].key));
-                        }
-                    }
-                }
-            }
-        }
-        System.out.println("B+树结构正常");
-    }
 }
