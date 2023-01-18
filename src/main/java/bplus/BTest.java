@@ -1,6 +1,5 @@
 package bplus;
 
-import org.junit.jupiter.api.Test;
 import util.MyRandomUtil;
 
 import java.util.ArrayList;
@@ -14,40 +13,38 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class BTest {
     public static void main(String[] args) {
-        new BTest().test3();
+        BTest t = new BTest();
+        for (int i = 0; i < 100; i++) {
+            t.test1();
+        }
+        t.test3();
     }
 
-    //    @Test
+    // 测试字符串随机插入和随机删除
     void test1() {
-        BTree bPlusTree = new BTree(16);
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-
+        BTree b = new BTree(16);
         HashSet<String> set = new HashSet<>();
         String key = null;
         for (int i = 0; i < 1000; i++) {
             key = MyRandomUtil.randomLowerStr(4);
-//            String key = String.format("1%04d", random.nextInt(0, 10000));
             if (!set.add(key)) {
                 System.out.println("重复key: " + key);
             }
-//            System.out.println(key);
-            bPlusTree.insert(key, i);
-//            bPlusTree.root.printTree();
-//            System.out.println();
+            b.insert(key, i);
+            b.checkTree();
         }
 
-        bPlusTree.root.printSelf();
+        b.printTree();
         System.out.println(set.size());
-        bPlusTree.checkTree();
 
         set.forEach(k -> {
-            if (bPlusTree.get(k) == null) {
-                System.out.println("???不存在key: " + k);
+            if (!b.remove(k)) {
+                throw new RuntimeException(String.format("%s删除失败", k));
             }
+            b.checkTree();
         });
     }
 
-    @Test
     void test2() {
         BTree b = new BTree(4);
         HashSet<String> set = new HashSet<>();
@@ -99,8 +96,8 @@ public class BTest {
             b.checkTree();
         }
 
-        b.printTree();
         b.checkTree();
+        b.printTree();
         b.printLeaf();
         for (String key : set) {
             System.out.println("\n删除" + key);
