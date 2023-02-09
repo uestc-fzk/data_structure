@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Set;
@@ -48,12 +49,14 @@ public class Logger {
     }
 
     private static void addMsg(LogLevel level, String msg) {
+        // 低于全局日志级别的日志忽略
+        if (level.lower(globalLevel)) return;
         LogRecord logRecord = new LogRecord(level, msg, LocalDateTime.now(), 4);
         try {
             lock.lockInterruptibly();
             try {
                 // 写满了，等待, 必须用while，会有很多情况下会唤醒
-                while (queueWrite.size() >= 1024) {
+                while (queueWrite.size() >= defaultLogConf.getLogQueueSize()) {
                     emptyCond.await();
                 }
                 queueWrite.add(logRecord);
@@ -66,23 +69,38 @@ public class Logger {
         }
     }
 
-    private static volatile ArrayList<LogRecord> queueWrite = new ArrayList<>(1024);
-    private static volatile ArrayList<LogRecord> queueRead = new ArrayList<>(1024);
+    private static final LogConf defaultLogConf = LogConf.getDefaultLogConf();
+    private static final LogLevel globalLevel;// 当前设置的日志级别，低于此级别的不会打印
+    private static volatile ArrayList<LogRecord> queueWrite;// 各个日志写入此队列
+    private static volatile ArrayList<LogRecord> queueRead;// flush线程从此队列处理日志
     private static final ReentrantLock lock = new ReentrantLock();
     private static final Condition emptyCond = lock.newCondition();
     private static final FlushThread flushTread = new FlushThread();
-    private static final FileChannel file;
+    private static FileChannel file;
 
     static {
         try {
-            // 先确保已经创建目录
-            Path logPath = Path.of("logs/info.log");
+            // 1.目录处理
+            Path logPath = Path.of(defaultLogConf.getLogPath());
             if (Files.notExists(logPath.getParent()))
-                Files.createDirectory(logPath.getParent());
-            file = FileChannel.open(logPath, Set.of(StandardOpenOption.WRITE, StandardOpenOption.CREATE));
+                Files.createDirectories(logPath.getParent());
+            // 2.打开日志文件通道
+            // 如果旧文件存在则备份
+            if (Files.exists(logPath)) {
+                splitLogFile();
+            } else {
+                file = FileChannel.open(logPath, Set.of(StandardOpenOption.WRITE, StandardOpenOption.CREATE));
+            }
+
+            // 3.队列初始化
+            queueWrite = new ArrayList<>(defaultLogConf.getLogQueueSize());
+            queueRead = new ArrayList<>(defaultLogConf.getLogQueueSize());
+            // 4.日志level设置
+            globalLevel = LogLevel.getLevel(defaultLogConf.getLogLevel());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        // 5.日志刷新线程启动
         flushTread.setDaemon(true);// 必须设为后台线程
         flushTread.start();
     }
@@ -144,14 +162,38 @@ public class Logger {
         }
 
         public void handleRead() throws IOException {
+            // 1.处理日志队列
             for (LogRecord record : queueRead) {
                 // level time caller msg
                 String content = String.format("%s %s %s %s\n", record.level, format.format(record.time), record.caller, record.msg);
                 file.write(ByteBuffer.wrap(content.getBytes(StandardCharsets.UTF_8)));
+                if (record.level.higher(LogLevel.INFO)) System.err.print(content);
+                else System.out.print(content);
             }
-            file.force(true);// 落盘
-            //System.out.println(queueRead.size());
             queueRead.clear();// 清空队列
+            // 2.落盘
+            file.force(true);
+            // 3.切割日志
+            if (file.size() >= defaultLogConf.getLogFileSize()) {
+                splitLogFile();
+            }
         }
+    }
+
+    // 日志切割，按文件大小切割
+    // 调用这个方法，日志文件一定是存在的
+    private static void splitLogFile() throws IOException {
+        // 1.关闭文件
+        if (file != null && file.isOpen())
+            file.close();
+        // 2.文件替换：以文件最后修改时间命名，因为不知道为啥以创建时间有bug?
+        Path origin = Path.of(defaultLogConf.getLogPath());
+        LocalDateTime modifiedTime = LocalDateTime.ofInstant(Files.getLastModifiedTime(origin).toInstant(), ZoneId.systemDefault());
+        Path target = Path.of(String.format("%s_%04d%02d%02d_%02d%02d%02d.%09d", defaultLogConf.getLogPath(),
+                modifiedTime.getYear(), modifiedTime.getMonth().getValue(), modifiedTime.getDayOfMonth(),
+                modifiedTime.getHour(), modifiedTime.getMinute(), modifiedTime.getSecond(), modifiedTime.getNano()));
+        Files.move(origin, target);
+        // 3.创建新文件
+        file = FileChannel.open(origin, Set.of(StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW));
     }
 }
