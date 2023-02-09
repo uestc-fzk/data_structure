@@ -167,7 +167,9 @@ public class Logger {
                 // level time caller msg
                 String content = String.format("%s %s %s %s\n", record.level, format.format(record.time), record.caller, record.msg);
                 file.write(ByteBuffer.wrap(content.getBytes(StandardCharsets.UTF_8)));
-                if (record.level.higher(LogLevel.INFO)) System.err.print(content);
+                // 控制台染色
+                if (record.level.higher(LogLevel.INFO))
+                    System.out.printf("%s%s%s", ConsoleColors.RED, content, ConsoleColors.RESET);
                 else System.out.print(content);
             }
             queueRead.clear();// 清空队列
