@@ -1,4 +1,4 @@
-package util;
+package com.fzk.util;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;

@@ -1,8 +1,8 @@
-package graph.minTree;
+package com.fzk.graph.minTree;
 
-import graph.Edge;
-import graph.MyGraph;
-import graph.Node;
+import com.fzk.graph.Edge;
+import com.fzk.graph.MyGraph;
+import com.fzk.graph.Node;
 
 import java.util.HashSet;
 import java.util.PriorityQueue;

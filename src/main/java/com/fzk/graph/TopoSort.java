@@ -1,4 +1,4 @@
-package graph;
+package com.fzk.graph;
 
 import java.util.ArrayList;
 import java.util.HashMap;

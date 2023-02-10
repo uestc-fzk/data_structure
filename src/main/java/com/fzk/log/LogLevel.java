@@ -1,4 +1,4 @@
-package log;
+package com.fzk.log;
 
 /**
  * @author fzk

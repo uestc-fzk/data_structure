@@ -1,4 +1,4 @@
-package graph.minTree;
+package com.fzk.graph.minTree;
 
 /**
  * 并查集

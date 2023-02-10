@@ -1,4 +1,4 @@
-package log;
+package com.fzk.log;
 
 /**
  * 控制台彩色文本

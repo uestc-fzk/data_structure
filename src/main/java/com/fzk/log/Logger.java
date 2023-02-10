@@ -1,4 +1,4 @@
-package log;
+package com.fzk.log;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

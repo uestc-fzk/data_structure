@@ -1,4 +1,4 @@
-package log;
+package com.fzk.log;
 
 /**
  * 日志配置类

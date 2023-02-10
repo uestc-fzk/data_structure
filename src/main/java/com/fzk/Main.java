@@ -1,4 +1,6 @@
-import log.Logger;
+package com.fzk;
+
+import com.fzk.log.Logger;
 
 import java.io.IOException;
 import java.time.Instant;

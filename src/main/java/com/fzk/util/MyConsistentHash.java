@@ -1,4 +1,4 @@
-package util;
+package com.fzk.util;
 
 import java.util.*;
 import java.util.zip.CRC32;

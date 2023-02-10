@@ -1,6 +1,6 @@
-package bplus;
+package com.fzk.bplus;
 
-import util.MyRandomUtil;
+import com.fzk.util.MyRandomUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
