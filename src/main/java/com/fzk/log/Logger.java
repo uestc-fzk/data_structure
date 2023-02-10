@@ -8,6 +8,7 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -187,6 +188,7 @@ public class Logger {
         }
         // 2.文件替换：以写入文件第一行的时间命名，因为不知道为啥以创建时间有bug?
         Path origin = Path.of(defaultLogConf.getLogPath());
+        Path target = null;
         // 注意要关闭资源
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(origin.toFile()));) {
             String s = bufferedReader.readLine();
@@ -195,11 +197,12 @@ public class Logger {
             long second = Long.parseLong(splits[0]);
             int nano = Integer.parseInt(splits[1]);
             LocalDateTime createTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(second, nano), ZoneId.systemDefault());
-            Path target = Path.of(String.format("%s_%04d%02d%02d_%02d%02d%02d.%09d", defaultLogConf.getLogPath(),
+            target = Path.of(String.format("%s_%04d%02d%02d_%02d%02d%02d.%09d", defaultLogConf.getLogPath(),
                     createTime.getYear(), createTime.getMonth().getValue(), createTime.getDayOfMonth(),
                     createTime.getHour(), createTime.getMinute(), createTime.getSecond(), createTime.getNano()));
-            Files.move(origin, target);
         }
+        // 注意：这里必须先关闭资源，再进行移动，否则会报错：另一个程序正在使用此文件，进程无法访问。
+        Files.move(origin, target, StandardCopyOption.ATOMIC_MOVE);
         // 3.创建新文件
         createLogFile(origin);
     }
