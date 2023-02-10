@@ -1,5 +1,7 @@
 package log;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -7,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -80,17 +83,9 @@ public class Logger {
 
     static {
         try {
-            // 1.目录处理
+            // 1.创建或切割日志
             Path logPath = Path.of(defaultLogConf.getLogPath());
-            if (Files.notExists(logPath.getParent()))
-                Files.createDirectories(logPath.getParent());
-            // 2.打开日志文件通道
-            // 如果旧文件存在则备份
-            if (Files.exists(logPath)) {
-                splitLogFile();
-            } else {
-                file = FileChannel.open(logPath, Set.of(StandardOpenOption.WRITE, StandardOpenOption.CREATE));
-            }
+            createLogFile(logPath);
 
             // 3.队列初始化
             queueWrite = new ArrayList<>(defaultLogConf.getLogQueueSize());
@@ -165,7 +160,8 @@ public class Logger {
             // 1.处理日志队列
             for (LogRecord record : queueRead) {
                 // level time caller msg
-                String content = String.format("%s %s %s %s\n", record.level, format.format(record.time), record.caller, record.msg);
+                // warning长度为7
+                String content = String.format("%-7s %s %s %s\n", record.level, format.format(record.time), record.caller, record.msg);
                 file.write(ByteBuffer.wrap(content.getBytes(StandardCharsets.UTF_8)));
                 // 控制台染色
                 if (record.level.higher(LogLevel.INFO))
@@ -183,19 +179,48 @@ public class Logger {
     }
 
     // 日志切割，按文件大小切割
-    // 调用这个方法，日志文件一定是存在的
+    // 注意：调用这个方法，日志文件一定是存在的
     private static void splitLogFile() throws IOException {
         // 1.关闭文件
-        if (file != null && file.isOpen())
+        if (file != null && file.isOpen()) {
             file.close();
-        // 2.文件替换：以文件最后修改时间命名，因为不知道为啥以创建时间有bug?
+        }
+        // 2.文件替换：以写入文件第一行的时间命名，因为不知道为啥以创建时间有bug?
         Path origin = Path.of(defaultLogConf.getLogPath());
-        LocalDateTime modifiedTime = LocalDateTime.ofInstant(Files.getLastModifiedTime(origin).toInstant(), ZoneId.systemDefault());
-        Path target = Path.of(String.format("%s_%04d%02d%02d_%02d%02d%02d.%09d", defaultLogConf.getLogPath(),
-                modifiedTime.getYear(), modifiedTime.getMonth().getValue(), modifiedTime.getDayOfMonth(),
-                modifiedTime.getHour(), modifiedTime.getMinute(), modifiedTime.getSecond(), modifiedTime.getNano()));
-        Files.move(origin, target);
+        // 注意要关闭资源
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(origin.toFile()));) {
+            String s = bufferedReader.readLine();
+            String[] splits = s.split("\\.");
+            if (splits.length != 2) throw new RuntimeException("写入文件第一行的时间错误：" + s);
+            long second = Long.parseLong(splits[0]);
+            int nano = Integer.parseInt(splits[1]);
+            LocalDateTime createTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(second, nano), ZoneId.systemDefault());
+            Path target = Path.of(String.format("%s_%04d%02d%02d_%02d%02d%02d.%09d", defaultLogConf.getLogPath(),
+                    createTime.getYear(), createTime.getMonth().getValue(), createTime.getDayOfMonth(),
+                    createTime.getHour(), createTime.getMinute(), createTime.getSecond(), createTime.getNano()));
+            Files.move(origin, target);
+        }
         // 3.创建新文件
-        file = FileChannel.open(origin, Set.of(StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW));
+        createLogFile(origin);
+    }
+
+    // 创建日志文件，并将创建时间写入第一行
+    private static void createLogFile(Path path) throws IOException {
+        // 1.先确保目录已经创建
+        if (Files.notExists(path.getParent())) {
+            Files.createDirectories(path.getParent());
+        }
+        // 2.日志文件若存在，则切割
+        if (Files.exists(path)) {
+            splitLogFile();
+        } else {
+            // 3.创建日志文件，并将创建时间写入第一行
+            Instant now = Instant.now();// 注意：测试发现目前不管是Instant还是LocalDateTime都只能精确到微秒
+            file = FileChannel.open(path, Set.of(StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW));
+            // 创建时间: second.nano\n
+            String createTime = String.format("%d.%d\n", now.getEpochSecond(), now.getNano());
+            file.write(ByteBuffer.wrap(createTime.getBytes(StandardCharsets.UTF_8)));
+            file.force(true);
+        }
     }
 }
