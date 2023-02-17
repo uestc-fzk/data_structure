@@ -71,9 +71,30 @@ public class LogConf {
         return conf;
     }
 
-    // 自动探测配置文件从而解析日志配置
+    /**
+     * 自动探测日志配置文件并解析，优先级如下：
+     * 1.工作目录下: conf/log.properties
+     * 2.类路径下: log.properties
+     * 3.默认配置
+     * 原因：工作目录下的配置可以随时修改，而类路径下会打包进jar，修改后需重新打包
+     *
+     * @return 有文件则解析文件，无则返回默认配置
+     * @throws IOException 文件解析出错
+     */
     public static LogConf detectLogConf() throws IOException {
-        // 1.优先加载类路劲下 log.properties
+        // 1.优先加载当前工作目录下 conf/log.properties
+        System.out.println("日志配置探测：工作路径下conf/log.properties");
+        if (Files.exists(Path.of("conf/log.properties"))) {
+            try (FileReader fileReader = new FileReader("conf/log.properties")) {
+                System.out.println("日志配置探测成功：读取工作目录下conf/log.properties");
+                Properties p = new Properties();
+                p.load(fileReader);
+                System.out.println("conf/log.properties下的配置为：" + p);
+                return parseToConf(p);
+            }
+        }
+
+        // 2.再尝试加载类路劲下 log.properties
         System.out.println("日志配置探测：类路径下log.properties");
         try (InputStream in = LogConf.class.getClassLoader().
                 getResourceAsStream("log.properties")) {
@@ -86,22 +107,10 @@ public class LogConf {
             }
         }
 
-        // 2.再尝试加载当前工作目录下 conf/log.properties
-        System.out.println("日志配置探测：工作路径下conf/log.properties");
-        if (Files.exists(Path.of("conf/log.properties"))) {
-            try (FileReader fileReader = new FileReader("conf/log.properties")) {
-                System.out.println("日志配置探测成功：读取工作目录下conf/log.properties");
-                Properties p = new Properties();
-                p.load(fileReader);
-                System.out.println("conf/log.properties下的配置为：" + p);
-                return parseToConf(p);
-            }
-        }
-
         // 3.返回默认配置
-        LogConf logConf= getDefaultLogConf();
+        LogConf logConf = getDefaultLogConf();
         System.err.println("未探测到日志配置文件: 类路劲下log.properties或当前工作目录下conf/log.properties");
-        System.out.println("日志默认配置: "+logConf);
+        System.out.println("日志默认配置: " + logConf);
         return logConf;
     }
 
