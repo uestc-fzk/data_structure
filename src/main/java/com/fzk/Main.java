@@ -10,7 +10,10 @@ import java.time.ZoneOffset;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException, IOException {
-        testLog();
+        Logger.warning("1");
+        Logger.info("1");
+        Thread.sleep(1000);
+//        testLog();
 //        test1();
     }
 

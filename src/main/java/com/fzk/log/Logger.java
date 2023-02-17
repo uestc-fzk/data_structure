@@ -73,7 +73,7 @@ public class Logger {
         }
     }
 
-    private static final LogConf defaultLogConf = LogConf.getDefaultLogConf();
+    private static final LogConf defaultLogConf;
     private static final LogLevel globalLevel;// 当前设置的日志级别，低于此级别的不会打印
     private static volatile ArrayList<LogRecord> queueWrite;// 各个日志写入此队列
     private static volatile ArrayList<LogRecord> queueRead;// flush线程从此队列处理日志
@@ -84,7 +84,9 @@ public class Logger {
 
     static {
         try {
-            // 1.创建或切割日志
+            // 1.日志配置探测
+            defaultLogConf = LogConf.detectLogConf();
+            // 2.创建或切割日志
             Path logPath = Path.of(defaultLogConf.getLogPath());
             createLogFile(logPath);
 
