@@ -7,14 +7,17 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException, IOException {
-        Logger.warning("1");
-        Logger.info("1");
-        Thread.sleep(1000);
+//        Logger.warning("1");
+//        Logger.info("1");
+//        Thread.sleep(1000);
 //        testLog();
 //        test1();
+        testLock();
+
     }
 
     static void testLog() {
@@ -43,8 +46,40 @@ public class Main {
         System.out.println(LocalDateTime.ofInstant(instant, ZoneId.systemDefault()));
 
 
-        System.out.printf("%-8s","warning");
+        System.out.printf("%-8s", "warning");
     }
 
     static long nanoToSecond = 1000_000_000L;
+
+    // java中出现死锁无法自动走出来
+    static void testLock() {
+        final ReentrantLock lockA = new ReentrantLock();
+        final ReentrantLock lockB = new ReentrantLock();
+        new Thread(() -> {
+            synchronized (lockB) {
+                System.out.println("2获取锁B");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                synchronized (lockA) {
+                    System.out.println("2获取锁A");
+                }
+            }
+        }).start();
+        synchronized (lockA) {
+
+            System.out.println("1获取锁A");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            synchronized (lockB) {
+                System.out.println("1获取锁B");
+            }
+        }
+
+    }
 }
