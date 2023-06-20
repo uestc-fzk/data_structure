@@ -358,8 +358,12 @@ public class BTree {
                 if (remove instanceof IndexNode ir) {
                     for (int i = 0; i < ir.size; i++) {
                         queue.add((BNode) ir.entries[i].value);
-                        myAssert(ir.entries[i].key.equals(((BNode) ir.entries[i].value).getMinKey()), String.format("%s不是其指向的子结点min key", ir.entries[i].key));
-                        myAssert((((BNode) ir.entries[i].value).parentNode == ir), String.format("%s的父节点指向错误", ir.entries[i].key));
+                        if (!ir.entries[i].key.equals(((BNode) ir.entries[i].value).getMinKey())) {
+                            throw new RuntimeException(String.format("%s不是其指向的子结点min key", ir.entries[i].key));
+                        }
+                        if ((((BNode) ir.entries[i].value).parentNode != ir)) {
+                            throw new RuntimeException(String.format("%s的父节点指向错误", ir.entries[i].key));
+                        }
                     }
                 }
 
@@ -386,10 +390,5 @@ public class BTree {
         if (!head.getMinKey().equals(root.getMinKey()) || head.preNode != null) {
             throw new RuntimeException("head节点错误");
         }
-    }
-
-    // 断言，开发时用于定位问题，正常情况下必须不能出错
-    public static void myAssert(boolean flag, String msg) {
-        if (!flag) throw new RuntimeException(msg);
     }
 }
