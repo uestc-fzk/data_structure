@@ -3,9 +3,7 @@ package com.fzk.bplus;
 import com.fzk.util.MyRandomUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author fzk
@@ -23,56 +21,32 @@ public class BTest {
     // 测试字符串随机插入和随机删除
     void test1() {
         BTree b = new BTree(16);
-        HashSet<String> set = new HashSet<>();
-        String key = null;
-        for (int i = 0; i < 1000; i++) {
-            key = MyRandomUtil.randomLowerStr(4);
-            if (!set.add(key)) {
-                System.out.println("重复key: " + key);
-            }
-            b.insert(key, i);
-            b.checkTree();
-        }
-
-        b.printTree();
-        System.out.println(set.size());
-
-        set.forEach(k -> {
-            if (!b.remove(k)) {
-                throw new RuntimeException(String.format("%s删除失败", k));
-            }
-            b.checkTree();
-        });
-    }
-
-    void test2() {
-        BTree b = new BTree(4);
-        HashSet<String> set = new HashSet<>();
         ArrayList<String> list = new ArrayList<>();
+        HashSet<String> set = new HashSet<>();
         try {
-            for (int i = 0; i < 100; i++) {
-                String key = String.format("%03d", ThreadLocalRandom.current().nextInt(0, 1000));
+            for (int i = 0; i < 1000; i++) {
+                String key = MyRandomUtil.randomLowerStr(4);
                 list.add(key);
                 if (!set.add(key)) {
                     System.out.println("重复key: " + key);
                 }
-                b.insert(key, i);
-            }
-            b.printTree();
-            for (String key : set) {
-                System.out.println("删除" + key);
-                if (!b.remove(key)) {
-                    System.out.println("删除失败：" + key);
-                }
-                b.printTree();
+                b.put(key, i);
                 b.checkTree();
             }
-        } catch (RuntimeException e) {
-            System.out.println("插入顺序:" + Arrays.toString(list.toArray()));
-            throw e;
+
+            b.printTree();
+            System.out.println(set.size());
+
+            set.forEach(k -> {
+                if (b.remove(k) == null) {
+                    throw new RuntimeException(String.format("%s删除失败", k));
+                }
+                b.checkTree();
+            });
+        } catch (Exception e) {
+            System.out.println("插入顺序: " + list);
         }
     }
-
 
     void test3() {
         BTree b = new BTree(4);
@@ -92,20 +66,20 @@ public class BTest {
                 System.out.println("重复key: " + key);
             }
             System.out.println("插入key:" + key);
-            b.insert(key, 0);
+            b.put(key, 0);
             b.checkTree();
         }
 
         b.checkTree();
         b.printTree();
-        b.printLeaf();
+        System.out.println("叶子节点: " + b.getLeafString());
         for (String key : set) {
-            System.out.println("\n删除" + key);
-            if (!b.remove(key)) {
+            System.out.println("删除" + key);
+            if (b.remove(key) == null) {
                 System.out.println("删除失败：" + key);
             }
             b.printTree();
-            b.printLeaf();
+            System.out.println("叶子节点: " + b.getLeafString());
             b.checkTree();
         }
     }
