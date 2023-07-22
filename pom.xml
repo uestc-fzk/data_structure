@@ -22,6 +22,11 @@
             <artifactId>lombok</artifactId>
             <version>1.18.24</version>
         </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.28</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -29,6 +34,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>2.5.0</version>
                 <configuration>
                     <!-- 指定启动类 -->
                     <mainClass>com.fzk.Main</mainClass>
