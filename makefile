@@ -1,3 +1,5 @@
+p:
+	mvn clean package
 run:
 	java -jar target/data_structure-1.0-SNAPSHOT.jar
 run-ea: # 开断言

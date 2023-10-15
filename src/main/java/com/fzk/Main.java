@@ -1,6 +1,7 @@
 package com.fzk;
 
 import com.fzk.log.Logger;
+import com.fzk.virtualtThread.VirtualTest;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -16,8 +17,11 @@ public class Main {
 //        Thread.sleep(1000);
 //        testLog();
 //        test1();
-        testLock();
+//        testLock();
 
+        VirtualTest virtualTest = new VirtualTest();
+//        virtualTest.testSleep();
+        virtualTest.testIO();
     }
 
     static void testLog() {
@@ -80,6 +84,5 @@ public class Main {
                 System.out.println("1获取锁B");
             }
         }
-
     }
 }

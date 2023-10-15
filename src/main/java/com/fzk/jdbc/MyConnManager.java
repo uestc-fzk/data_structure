@@ -25,6 +25,7 @@ public class MyConnManager {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        System.out.println(p);
         return p;
     }
 
