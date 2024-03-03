@@ -1,7 +1,7 @@
 package com.fzk;
 
 import com.fzk.log.Logger;
-import com.fzk.virtualtThread.VirtualTest;
+import com.fzk.rocketmq.ProducerDemo;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -19,9 +19,10 @@ public class Main {
 //        test1();
 //        testLock();
 
-        VirtualTest virtualTest = new VirtualTest();
+//        VirtualTest virtualTest = new VirtualTest();
 //        virtualTest.testSleep();
-        virtualTest.testIO();
+//        virtualTest.testIO();
+        testMQProducer();
     }
 
     static void testLog() {
@@ -83,6 +84,12 @@ public class Main {
             synchronized (lockB) {
                 System.out.println("1获取锁B");
             }
+        }
+    }
+
+    static void testMQProducer() {
+        try (ProducerDemo producer = new ProducerDemo()) {
+            producer.sendMsg("fzk",  "test_tag","hello");
         }
     }
 }

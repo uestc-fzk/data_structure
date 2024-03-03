@@ -1,0 +1,42 @@
+#output:
+#  - ./examples/shardingsphere-jdbc-example-generator/target/generated-sources/
+
+# supported: cluster-zookeeper,cluster-etcd,standalone
+modes:
+  type: Standalone
+  repository:
+    type: JDBC # 持久化仓库类型
+    props: # 持久化仓库所需属性
+      foo_key: foo_value
+      bar_key: bar_value
+
+# supported: local, xa-atomikos, xa-narayana, base-seata
+transactions:
+  - local
+  - xa-atomikos
+  - xa-narayana
+  - base-seata
+
+# supported: sharding,readwrite-splitting,encrypt,shadow,mask
+features:
+  - sharding
+  - readwrite-splitting
+  - encrypt
+  - shadow
+  - mask
+
+# supported：jdbc,spring-boot-starter-jdbc,spring-boot-starter-jpa,spring-boot-starter-mybatis,spring-namespace-jdbc,spring-namespace-jpa,spring-namespace-mybatis
+frameworks:
+  - jdbc
+  - spring-boot-starter-jdbc
+  - spring-boot-starter-jpa
+  - spring-boot-starter-mybatis
+  - spring-namespace-jdbc
+  - spring-namespace-jpa
+  - spring-namespace-mybatis
+
+props:
+  host: 124.223.192.8
+  port: 3306
+  username: root
+  password: !MySQL123456
